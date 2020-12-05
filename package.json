@@ -1,0 +1,47 @@
+{
+  "name": "async-conductor",
+  "version": "0.0.1",
+  "description": "library that helps to orchestrate asynchronous application components.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmnorc/async-conductor.git"
+  },
+  "keywords": [
+    "typescript",
+    "async",
+    "conductor",
+    "component"
+  ],
+  "author": "Dmitry Sedelnikov<dmnorc@gmail.com",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/dmnorc/async-conductor/issues"
+  },
+  "homepage": "https://github.com/dmnorc/async-conductor#readme",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "precommit": "yarn lint",
+    "prepare": "yarn build",
+    "prettier": "prettier --config package.json src/**/*.ts"
+  },
+  "dependencies": {
+    "tslib": "^2.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.10",
+    "ts-node": "^9.1.0",
+    "typescript": "^4.1.2",
+    "prettier": "^2.2.1"
+  },
+  "exclude": [
+    "node_modules",
+    "src/**/*.spec.ts"
+  ],
+  "prettier": {
+    "singleQuote": false,
+    "trailingComma": "all",
+    "printWidth": 80
+  }
+}
