@@ -23,7 +23,7 @@
   "scripts": {
     "build": "tsc",
     "precommit": "yarn lint",
-    "coverage": "nyc --reporter=text npm run test",
+    "coverage": "nyc --reporter=text yarn test",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "prepare": "yarn build",
     "prettier": "prettier --config package.json src/**/*.ts",
