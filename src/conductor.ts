@@ -1,61 +1,70 @@
-import {Type} from "./interfaces";
-import {Component} from "./component";
+import { Constructor, IComponent, IConductor } from "./interfaces";
 
+export class Conductor implements IConductor {
+  protected readonly patches: { [key: string]: Constructor<IComponent> };
+  protected readonly components: { [key: string]: IComponent };
 
-export class Conductor {
-    context: any;
-    protected readonly patches: { [key: string]: Type<Component> };
-    protected readonly components: { [key: string]: Component };
+  constructor() {
+    this.patches = {};
+    this.components = {};
+  }
 
-    constructor(context: any = {}) {
-        this.patches = {};
-        this.components = {};
-        this.context = context;
-    }
+  async setup(): Promise<void> {
+    const scheduled: Set<IComponent> = new Set();
+    const aws: Promise<IComponent>[] = [];
 
-    async setup() {
-        const scheduled: Set<Component> = new Set();
-        const aws: Promise<Component>[] = [];
-
-        const scheduling = (): void => {
-            Object.values(this.components).forEach((component) => {
-                if (!scheduled.has(component)) {
-                    scheduled.add(component);
-                    const dependsOn: Component[] = component.getRequires().map((dependencyClass) => {
-                        const component = this.add(dependencyClass);
-                        scheduled.add(this.add(dependencyClass));
-                        return component;
-                    });
-                    scheduled.add(component);
-                    aws.push(component.setup(dependsOn));
-                }
-            }, );
-            if(scheduled.size !== Object.values(this.components).length) {
-                scheduling();
-            }
+    const scheduling = (): void => {
+      Object.values(this.components).forEach((component) => {
+        if (!scheduled.has(component)) {
+          scheduled.add(component);
+          const dependsOn: IComponent[] = component.dependencies.map(
+            (dependencyClass) => {
+              return this.add(dependencyClass);
+            },
+          );
+          scheduled.add(component);
+          aws.push(component.setup(dependsOn));
         }
+      });
+      if (scheduled.size !== Object.values(this.components).length) {
         scheduling();
-        await Promise.all(aws);
-    }
+      }
+    };
+    scheduling();
+    await Promise.all(aws);
+    return;
+  }
 
-    async shutdown() {
-        await Promise.all(Object.values(this.components).map((component) => {
-            return component.shutdown();
-        }))
-    }
+  async shutdown(): Promise<void> {
+    await Promise.all(
+      Object.values(this.components).map((component) => {
+        return component.shutdown();
+      }),
+    );
+  }
 
-    patch(componentClass: Type<Component>, patchClass: Type<Component>) {
-        this.patches[componentClass.name] = patchClass;
-    }
+  patch<T, U>(
+    componentClass: Constructor<T & IComponent>,
+    patchClass: Constructor<U & T & IComponent>,
+  ): void {
+    this.patches[componentClass.name] = patchClass;
+  }
 
-    add(componentClass: Type<Component>): Component {
-        if(this.components[componentClass.name]) {
-            return this.components[componentClass.name];
-        }
-        if(componentClass.name in this.patches) {
-            componentClass = this.patches[componentClass.name];
-        }
-        this.components[componentClass.name] = new componentClass(this, this.context);
-        return this.components[componentClass.name];
+  add<T>(componentClass: Constructor<IComponent>): T & IComponent {
+    if (this.components[componentClass.name]) {
+      return <T & IComponent>this.components[componentClass.name];
     }
+    if (componentClass.name in this.patches) {
+      componentClass = this.patches[componentClass.name];
+    }
+    this.components[componentClass.name] = new componentClass();
+    return <T & IComponent>this.components[componentClass.name];
+  }
+
+  get<T>(componentClass: Constructor<T & IComponent>): T & IComponent {
+    if (this.components[componentClass.name]) {
+      return <T & IComponent>this.components[componentClass.name];
+    }
+    return null;
+  }
 }
