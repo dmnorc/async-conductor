@@ -1,6 +1,6 @@
 {
   "name": "async-conductor",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "library that helps to orchestrate asynchronous application components.",
   "repository": {
     "type": "git",
@@ -54,9 +54,12 @@
     "ts-node": "^9.1.0",
     "typescript": "^4.1.2"
   },
-  "exclude": [
-    "node_modules",
-    "src/**/*.spec.ts",
-    ".travis.yml"
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LISENCE",
+    "tsconfig.json",
+    "yarn.lock"
   ]
 }

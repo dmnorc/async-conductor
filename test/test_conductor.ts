@@ -67,10 +67,17 @@ describe("Test Conductor", () => {
   it("Test Conductor Basic FLow", async () => {
     const testConductor = new Conductor();
     testConductor.add(TestComponent);
+    expect(testConductor.get(ResultComponent)).to.be.null;
     await testConductor.setup();
     const result = testConductor.get(ResultComponent);
     expect(result.getResult(TestComponent.name)).to.be.true;
     expect(result.getResult(TestComponent2.name)).to.be.true;
+    const testComponent = testConductor.get(TestComponent);
+    const testComponent2 = testConductor.get(TestComponent2);
+    expect(testComponent.getDependency(TestComponent)).to.be.null;
+    expect(testComponent.getDependency(TestComponent2)).to.be.equals(
+      testComponent2,
+    );
     await testConductor.shutdown();
     expect(result.getResult(TestComponent.name)).to.be.false;
     expect(result.getResult(TestComponent2.name)).to.be.false;

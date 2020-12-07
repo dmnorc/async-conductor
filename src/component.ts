@@ -1,41 +1,11 @@
-import { EventEmitter, on } from "events";
 import { Constructor, IComponent, IComponentEvent } from "./interfaces";
-
-enum Event {
-  active = "active",
-  acquired = "acquired",
-}
-
-class ComponentEvent implements IComponentEvent {
-  emitter: EventEmitter;
-  events: { [key: string]: boolean };
-
-  constructor() {
-    this.emitter = new EventEmitter();
-    this.events = {
-      [Event.active]: false,
-      [Event.acquired]: false,
-    };
-  }
-
-  emit(event: string, value: boolean): void {
-    this.events[event] = value;
-    this.emitter.emit(event, value);
-  }
-
-  async wait(event: string, desired: boolean): Promise<boolean> {
-    if (this.events[event] === desired) return desired;
-    for await (const [value] of on(this.emitter, event)) {
-      if (desired === value) return value;
-    }
-  }
-}
+import { ComponentEvent, Event } from "./event";
 
 export abstract class Component implements IComponent {
   dependencies: Constructor<IComponent>[] = [];
   protected requiredBy: Set<IComponent>;
   protected required: Set<IComponent>;
-  protected event: ComponentEvent;
+  protected event: IComponentEvent;
 
   constructor() {
     this.requiredBy = new Set<IComponent>();
@@ -44,8 +14,6 @@ export abstract class Component implements IComponent {
   }
 
   async setup(dependsOn: IComponent[]): Promise<this> {
-    const required = this.dependencies;
-
     if (dependsOn.length) {
       await Promise.all(
         dependsOn.map((component) => {
@@ -53,11 +21,6 @@ export abstract class Component implements IComponent {
           return component.acquire(this);
         }),
       );
-    }
-
-    for (const [key, value] of Object.entries(this)) {
-      const idx = required.indexOf(value);
-      if (idx > -1) Object.assign(this, { [key]: dependsOn[idx] });
     }
 
     await this.onSetup();

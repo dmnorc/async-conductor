@@ -1,6 +1,9 @@
 node_modules
 /dist
 
+# Coverage
+.nyc_output
+
 # Log files
 npm-debug.log*
 yarn-debug.log*
