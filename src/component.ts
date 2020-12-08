@@ -1,19 +1,21 @@
 import { Constructor, IComponent, IComponentEvent } from "./interfaces";
 import { ComponentEvent, Event } from "./event";
 
-export abstract class Component implements IComponent {
-  dependencies: Constructor<IComponent>[] = [];
-  protected requiredBy: Set<IComponent>;
-  protected required: Set<IComponent>;
+export abstract class Component<C = unknown> implements IComponent<C> {
+  context: C;
+  dependencies: Constructor<IComponent<C>, C>[] = [];
+  protected requiredBy: Set<IComponent<C>>;
+  protected required: Set<IComponent<C>>;
   protected event: IComponentEvent;
 
-  constructor() {
-    this.requiredBy = new Set<IComponent>();
-    this.required = new Set<IComponent>();
+  constructor(context: C) {
+    this.context = context;
+    this.requiredBy = new Set<IComponent<C>>();
+    this.required = new Set<IComponent<C>>();
     this.event = new ComponentEvent();
   }
 
-  async setup(dependsOn: IComponent[]): Promise<this> {
+  async setup(dependsOn: IComponent<C>[]): Promise<this> {
     if (dependsOn.length) {
       await Promise.all(
         dependsOn.map((component) => {
@@ -39,22 +41,22 @@ export abstract class Component implements IComponent {
     return this;
   }
 
-  async acquire(component: IComponent): Promise<this> {
+  async acquire(component: IComponent<C>): Promise<this> {
     await this.event.wait(Event.active, true);
     this.requiredBy.add(component);
     this.event.emit(Event.acquired, true);
     return this;
   }
 
-  release(component: IComponent): this {
+  release(component: IComponent<C>): this {
     this.requiredBy.delete(component);
     if (!this.requiredBy.size) this.event.emit(Event.acquired, false);
     return this;
   }
 
   getDependency<T>(
-    componentClass: Constructor<IComponent & T>,
-  ): IComponent & T {
+    componentClass: Constructor<IComponent<C> & T, C>,
+  ): IComponent<C> & T {
     for (const component of this.required.values()) {
       if (component instanceof componentClass) return component;
     }

@@ -3,7 +3,11 @@ import { expect } from "chai";
 
 import { Conductor, Component } from "../src";
 
-class ResultComponent extends Component {
+interface Context {
+  [key: string]: string;
+}
+
+class ResultComponent extends Component<Context> {
   [key: string]: unknown;
 
   async onSetup(): Promise<void> {
@@ -23,7 +27,7 @@ class ResultComponent extends Component {
   }
 }
 
-class TestComponent2 extends Component {
+class TestComponent2 extends Component<Context> {
   dependencies = [ResultComponent];
 
   async onSetup(): Promise<void> {
@@ -35,9 +39,14 @@ class TestComponent2 extends Component {
     const result = this.getDependency(ResultComponent);
     result.addResult(this.constructor.name, false);
   }
+
+  testMethod(): void {
+    const result = this.getDependency(ResultComponent);
+    result.addResult("test", true);
+  }
 }
 
-class TestComponent extends Component {
+class TestComponent extends Component<Context> {
   dependencies = [ResultComponent, TestComponent2];
 
   async onSetup(): Promise<void> {
@@ -61,11 +70,16 @@ class MockTestComponent extends TestComponent2 {
     const result = this.getDependency(ResultComponent);
     result.addResult(this.constructor.name, false);
   }
+
+  testMethod(): void {
+    const result = this.getDependency(ResultComponent);
+    result.addResult("test", true);
+  }
 }
 
 describe("Test Conductor", () => {
   it("Test Conductor Basic FLow", async () => {
-    const testConductor = new Conductor();
+    const testConductor = new Conductor<Context>({});
     testConductor.add(TestComponent);
     expect(testConductor.get(ResultComponent)).to.be.null;
     await testConductor.setup();
@@ -89,8 +103,12 @@ describe("Test Conductor", () => {
     testConductor.add(TestComponent);
     await testConductor.setup();
     const result = testConductor.get(ResultComponent);
+    const testComponent = testConductor.get(TestComponent2);
+    expect(testConductor.get(MockTestComponent)).to.be.equal(testComponent);
+    testComponent.testMethod();
     expect(result.getResult(TestComponent2.name)).to.be.undefined;
     expect(result.getResult(MockTestComponent.name)).to.be.true;
+    expect(result.getResult("test")).to.be.true;
     await testConductor.shutdown();
     expect(result.getResult(TestComponent2.name)).to.be.undefined;
     expect(result.getResult(MockTestComponent.name)).to.be.false;

@@ -1,6 +1,6 @@
 {
   "name": "async-conductor",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "library that helps to orchestrate asynchronous application components.",
   "repository": {
     "type": "git",

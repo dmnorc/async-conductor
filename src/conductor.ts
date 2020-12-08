@@ -1,23 +1,25 @@
 import { Constructor, IComponent, IConductor } from "./interfaces";
 
-export class Conductor implements IConductor {
-  protected readonly patches: { [key: string]: Constructor<IComponent> };
-  protected readonly components: { [key: string]: IComponent };
+export class Conductor<C = unknown> implements IConductor<C> {
+  context: C;
+  protected readonly patches: { [key: string]: Constructor<IComponent<C>, C> };
+  protected readonly components: { [key: string]: IComponent<C> };
 
-  constructor() {
+  constructor(context: C = null) {
+    this.context = context;
     this.patches = {};
     this.components = {};
   }
 
   async setup(): Promise<void> {
-    const scheduled: Set<IComponent> = new Set();
-    const aws: Promise<IComponent>[] = [];
+    const scheduled: Set<IComponent<C>> = new Set();
+    const aws: Promise<IComponent<C>>[] = [];
 
     const scheduling = (): void => {
       Object.values(this.components).forEach((component) => {
         if (!scheduled.has(component)) {
           scheduled.add(component);
-          const dependsOn: IComponent[] = component.dependencies.map(
+          const dependsOn: IComponent<C>[] = component.dependencies.map(
             (dependencyClass) => {
               return this.add(dependencyClass);
             },
@@ -44,26 +46,35 @@ export class Conductor implements IConductor {
   }
 
   patch<T, U>(
-    componentClass: Constructor<T & IComponent>,
-    patchClass: Constructor<U & T & IComponent>,
+    componentClass: Constructor<T & IComponent<C>, C>,
+    patchClass: Constructor<U & T & IComponent<C>, C>,
   ): void {
     this.patches[componentClass.name] = patchClass;
   }
 
-  add<T>(componentClass: Constructor<IComponent>): T & IComponent {
+  add<T>(componentClass: Constructor<T & IComponent<C>, C>): T & IComponent<C> {
     if (this.components[componentClass.name]) {
-      return <T & IComponent>this.components[componentClass.name];
+      return <T & IComponent<C>>this.components[componentClass.name];
     }
     if (componentClass.name in this.patches) {
-      componentClass = this.patches[componentClass.name];
+      componentClass = <Constructor<T & IComponent<C>, C>>(
+        this.patches[componentClass.name]
+      );
     }
-    this.components[componentClass.name] = new componentClass();
-    return <T & IComponent>this.components[componentClass.name];
+    this.components[componentClass.name] = <IComponent<C>>(
+      new componentClass(<C>this.context)
+    );
+    return <T & IComponent<C>>this.components[componentClass.name];
   }
 
-  get<T>(componentClass: Constructor<T & IComponent>): T & IComponent {
+  get<T>(componentClass: Constructor<T & IComponent<C>, C>): T & IComponent<C> {
+    if (componentClass.name in this.patches) {
+      componentClass = <Constructor<T & IComponent<C>, C>>(
+        this.patches[componentClass.name]
+      );
+    }
     if (this.components[componentClass.name]) {
-      return <T & IComponent>this.components[componentClass.name];
+      return <T & IComponent<C>>this.components[componentClass.name];
     }
     return null;
   }

@@ -12,8 +12,14 @@ How it can be solved by Async Conductor:
 ```typescript
 import { Conductor, Component } from "async-conductor";
 
+// You can use context that transfered from conductor to components, by default it's unknown
+// it's accessable via .context propery in conductor and containers instances 
+interface Context {
+  [key: string]: string;
+}
 
-class AsyncLogger extends Component {
+
+class AsyncLogger extends Component<Context> {
     async onSetup(): Promise<void> {
       // Setup logger here
     }
@@ -26,12 +32,13 @@ class AsyncLogger extends Component {
     error(): void {}
 }
 
-class Database extends Component {
+class Database extends Component<Context> {
     dependencies = [AsyncLogger];
 
     async onSetup(): Promise<void> {
       const logger = this.getDependency(AsyncLogger);
       logger.info("Starting connection");
+      const host = this.context.host;
       // Setup connection here
     }
     
@@ -45,7 +52,7 @@ class Database extends Component {
     }
 }
 
-class API extends Component {
+class API extends Component<Context> {
     dependencies = [AsyncLogger, Database];
 
     async onSetup(): Promise<void> {
@@ -62,7 +69,7 @@ class API extends Component {
     }
 }
 
-const apiConductor = new Conductor();
+const apiConductor = new Conductor<Context>({"host": "localhost"});
 apiConductor.add(API);
 
 apiConductor.setup().then(() => {
