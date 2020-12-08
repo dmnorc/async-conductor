@@ -1,4 +1,4 @@
-import { IComponentEvent } from "@src/interfaces";
+import { IComponentEvent } from "./interfaces";
 import { EventEmitter, on } from "events";
 
 export enum Event {
