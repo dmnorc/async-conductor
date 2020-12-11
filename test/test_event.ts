@@ -1,18 +1,18 @@
 import { it } from "mocha";
 
-import { ComponentEvent, Event } from "../src";
+import { EventType, Event } from "../src";
 
 it("Test ComponentEvent", async () => {
-  const event = new ComponentEvent();
-  event.emit(Event.active, true);
-  await event.wait(Event.active, true);
+  const event = new Event();
+  event.emit(EventType.active, true);
+  await event.wait(EventType.active, true);
   await Promise.all([
-    event.wait(Event.active, false),
+    event.wait(EventType.active, false),
     new Promise<void>((resolve) => {
       process.nextTick(() => {
-        event.emit(Event.active, true);
+        event.emit(EventType.active, true);
         process.nextTick(() => {
-          event.emit(Event.active, false);
+          event.emit(EventType.active, false);
           resolve();
         });
       });

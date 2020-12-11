@@ -1,20 +1,20 @@
 import { IComponentEvent } from "./interfaces";
 import { EventEmitter, on } from "events";
 
-export enum Event {
+export enum EventType {
   active = "active",
   acquired = "acquired",
 }
 
-export class ComponentEvent implements IComponentEvent {
+export class Event implements IComponentEvent {
   emitter: EventEmitter;
   events: { [key: string]: boolean };
 
   constructor() {
     this.emitter = new EventEmitter();
     this.events = {
-      [Event.active]: false,
-      [Event.acquired]: false,
+      [EventType.active]: false,
+      [EventType.acquired]: false,
     };
   }
 

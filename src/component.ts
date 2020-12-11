@@ -1,5 +1,5 @@
 import { Constructor, IComponent, IComponentEvent } from "./interfaces";
-import { ComponentEvent, Event } from "./event";
+import { Event, EventType } from "./event";
 
 export abstract class Component<C = unknown> implements IComponent<C> {
   context: C;
@@ -12,7 +12,23 @@ export abstract class Component<C = unknown> implements IComponent<C> {
     this.context = context;
     this.requiredBy = new Set<IComponent<C>>();
     this.required = new Set<IComponent<C>>();
-    this.event = new ComponentEvent();
+    this.event = new Event();
+  }
+
+  get active(): Promise<boolean> {
+    return this.event.wait(EventType.active, true);
+  }
+
+  get inactive(): Promise<boolean> {
+    return this.event.wait(EventType.active, false);
+  }
+
+  get acquired(): Promise<boolean> {
+    return this.event.wait(EventType.acquired, true);
+  }
+
+  get released(): Promise<boolean> {
+    return this.event.wait(EventType.acquired, false);
   }
 
   async setup(dependsOn: IComponent<C>[]): Promise<this> {
@@ -26,31 +42,31 @@ export abstract class Component<C = unknown> implements IComponent<C> {
     }
 
     await this.onSetup();
-    this.event.emit(Event.active, true);
+    this.event.emit(EventType.active, true);
     return this;
   }
 
   async shutdown(): Promise<this> {
     if (this.requiredBy.size) {
-      await this.event.wait(Event.acquired, false);
+      await this.released;
     }
 
     await this.onShutdown();
-    this.event.emit(Event.active, false);
+    this.event.emit(EventType.active, false);
     this.required.forEach((component) => component.release(this));
     return this;
   }
 
   async acquire(component: IComponent<C>): Promise<this> {
-    await this.event.wait(Event.active, true);
+    await this.active;
     this.requiredBy.add(component);
-    this.event.emit(Event.acquired, true);
+    this.event.emit(EventType.acquired, true);
     return this;
   }
 
   release(component: IComponent<C>): this {
     this.requiredBy.delete(component);
-    if (!this.requiredBy.size) this.event.emit(Event.acquired, false);
+    if (!this.requiredBy.size) this.event.emit(EventType.acquired, false);
     return this;
   }
 

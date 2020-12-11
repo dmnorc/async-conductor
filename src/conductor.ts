@@ -1,14 +1,30 @@
-import { Constructor, IComponent, IConductor } from "./interfaces";
+import {
+  Constructor,
+  IComponent,
+  IComponentEvent,
+  IConductor,
+} from "./interfaces";
+import { Event, EventType } from "./event";
 
 export class Conductor<C = unknown> implements IConductor<C> {
   context: C;
   protected readonly patches: { [key: string]: Constructor<IComponent<C>, C> };
   protected readonly components: { [key: string]: IComponent<C> };
+  protected event: IComponentEvent;
 
   constructor(context: C = null) {
     this.context = context;
     this.patches = {};
     this.components = {};
+    this.event = new Event();
+  }
+
+  get active(): Promise<boolean> {
+    return this.event.wait(EventType.active, true);
+  }
+
+  get inactive(): Promise<boolean> {
+    return this.event.wait(EventType.active, false);
   }
 
   async setup(): Promise<void> {
@@ -34,6 +50,7 @@ export class Conductor<C = unknown> implements IConductor<C> {
     };
     scheduling();
     await Promise.all(aws);
+    this.event.emit(EventType.active, true);
     return;
   }
 
@@ -43,6 +60,7 @@ export class Conductor<C = unknown> implements IConductor<C> {
         return component.shutdown();
       }),
     );
+    this.event.emit(EventType.active, false);
   }
 
   patch<T, U>(

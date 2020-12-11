@@ -82,7 +82,7 @@ describe("Test Conductor", () => {
     const testConductor = new Conductor<Context>({});
     testConductor.add(TestComponent);
     expect(testConductor.get(ResultComponent)).to.be.null;
-    await testConductor.setup();
+    await Promise.all([testConductor.setup(), testConductor.active]);
     const result = testConductor.get(ResultComponent);
     expect(result.getResult(TestComponent.name)).to.be.true;
     expect(result.getResult(TestComponent2.name)).to.be.true;
@@ -92,13 +92,13 @@ describe("Test Conductor", () => {
     expect(testComponent.getDependency(TestComponent2)).to.be.equals(
       testComponent2,
     );
-    await testConductor.shutdown();
+    await Promise.all([testConductor.shutdown(), testConductor.inactive]);
     expect(result.getResult(TestComponent.name)).to.be.false;
     expect(result.getResult(TestComponent2.name)).to.be.false;
   });
 
   it("Test Component Patch", async () => {
-    const testConductor = new Conductor();
+    const testConductor = new Conductor({});
     testConductor.patch(TestComponent2, MockTestComponent);
     testConductor.add(TestComponent);
     await testConductor.setup();

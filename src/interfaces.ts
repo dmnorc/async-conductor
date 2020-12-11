@@ -10,6 +10,10 @@ export interface IComponentEvent {
 export interface IComponent<C> {
   context: C;
   dependencies: Constructor<IComponent<C>, C>[];
+  readonly active: Promise<boolean>;
+  readonly inactive: Promise<boolean>;
+  readonly acquired: Promise<boolean>;
+  readonly released: Promise<boolean>;
   setup(dependsOn: IComponent<C>[]): Promise<this>;
   shutdown(): Promise<this>;
   acquire(component: IComponent<C>): Promise<this>;
@@ -21,6 +25,8 @@ export interface IComponent<C> {
 
 export interface IConductor<C> {
   context: C;
+  readonly active: Promise<boolean>;
+  readonly inactive: Promise<boolean>;
   setup(): Promise<void>;
   shutdown(): Promise<void>;
   patch<T, U>(
