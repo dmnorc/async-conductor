@@ -79,6 +79,17 @@ apiConductor.setup().then(() => {
   console.log("something goes wrong");
 });
 
+// State getters, the same for component and acuired, released for dependancy state.
+apiConductor.active.then(() => {
+  const logger = apiConductor.get(AsyncLogger);
+  logger.info("Conductor estabileshed");
+});
+
+apiConductor.inactive.then(() => {
+  const logger = apiConductor.get(AsyncLogger);
+  logger.info("condcutor is inactive");
+});
+
 process.on('exit', function () {
     apiConductor.shutdown().catch((error) => {
       console.log("something goes wrong");
