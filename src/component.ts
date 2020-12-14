@@ -1,34 +1,36 @@
-import { Constructor, IComponent, IComponentEvent } from "./interfaces";
-import { Event, EventType } from "./event";
+import { Constructor, IComponent, IEvent } from "./interfaces";
+import { Event } from "./event";
 
 export abstract class Component<C = unknown> implements IComponent<C> {
   context: C;
   dependencies: Constructor<IComponent<C>, C>[] = [];
   protected requiredBy: Set<IComponent<C>>;
   protected required: Set<IComponent<C>>;
-  protected event: IComponentEvent;
+  protected activeEvent: IEvent;
+  protected acquireEvent: IEvent;
 
   constructor(context: C) {
     this.context = context;
     this.requiredBy = new Set<IComponent<C>>();
     this.required = new Set<IComponent<C>>();
-    this.event = new Event();
+    this.activeEvent = new Event();
+    this.acquireEvent = new Event();
   }
 
   get active(): Promise<void> {
-    return this.event.wait(EventType.active, true);
+    return this.activeEvent.wait(true);
   }
 
   get inactive(): Promise<void> {
-    return this.event.wait(EventType.active, false);
+    return this.activeEvent.wait(false);
   }
 
   get acquired(): Promise<void> {
-    return this.event.wait(EventType.acquired, true);
+    return this.acquireEvent.wait(true);
   }
 
   get released(): Promise<void> {
-    return this.event.wait(EventType.acquired, false);
+    return this.acquireEvent.wait(false);
   }
 
   async setup(dependsOn: IComponent<C>[]): Promise<this> {
@@ -42,7 +44,7 @@ export abstract class Component<C = unknown> implements IComponent<C> {
     }
 
     await this.onSetup();
-    this.event.emit(EventType.active, true);
+    this.activeEvent.set();
     return this;
   }
 
@@ -52,7 +54,7 @@ export abstract class Component<C = unknown> implements IComponent<C> {
     }
 
     await this.onShutdown();
-    this.event.emit(EventType.active, false);
+    this.activeEvent.clear();
     this.required.forEach((component) => component.release(this));
     return this;
   }
@@ -60,13 +62,15 @@ export abstract class Component<C = unknown> implements IComponent<C> {
   async acquire(component: IComponent<C>): Promise<this> {
     await this.active;
     this.requiredBy.add(component);
-    this.event.emit(EventType.acquired, true);
+    this.acquireEvent.set();
     return this;
   }
 
   release(component: IComponent<C>): this {
     this.requiredBy.delete(component);
-    if (!this.requiredBy.size) this.event.emit(EventType.acquired, false);
+    if (!this.requiredBy.size) {
+      this.acquireEvent.clear();
+    }
     return this;
   }
 

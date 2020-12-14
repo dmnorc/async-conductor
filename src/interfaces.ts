@@ -1,10 +1,7 @@
-import { EventEmitter } from "events";
-
-export interface IComponentEvent {
-  emitter: EventEmitter;
-  events: { [key: string]: boolean };
-  emit(event: string, value: boolean): void;
-  wait(event: string, desired: boolean): Promise<void>;
+export interface IEvent {
+  set(): void;
+  clear(): void;
+  wait(isSet: boolean): Promise<void>;
 }
 
 export interface IComponent<C> {

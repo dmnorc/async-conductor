@@ -1,32 +1,30 @@
-import { IComponentEvent } from "./interfaces";
+import { IEvent } from "./interfaces";
 import { EventEmitter, on } from "events";
 
-export enum EventType {
-  active = "active",
-  acquired = "acquired",
-}
+export class Event implements IEvent {
+  protected readonly emitter: EventEmitter;
+  protected value: boolean;
+  protected readonly event = "event";
 
-export class Event implements IComponentEvent {
-  emitter: EventEmitter;
-  events: { [key: string]: boolean };
-
-  constructor() {
+  constructor(setDefault = false) {
     this.emitter = new EventEmitter();
-    this.events = {
-      [EventType.active]: false,
-      [EventType.acquired]: false,
-    };
+    this.value = setDefault;
   }
 
-  emit(event: string, value: boolean): void {
-    this.events[event] = value;
-    this.emitter.emit(event, value);
+  set(): void {
+    this.value = true;
+    this.emitter.emit(this.event, true);
   }
 
-  async wait(event: string, desired: boolean): Promise<void> {
-    if (this.events[event] === desired) return;
-    for await (const [value] of on(this.emitter, event)) {
-      if (desired === value) return;
+  clear(): void {
+    this.value = false;
+    this.emitter.emit(this.event, false);
+  }
+
+  async wait(isSet: boolean): Promise<void> {
+    if (this.value === isSet) return;
+    for await (const [value] of on(this.emitter, this.event)) {
+      if (isSet === value) return;
     }
   }
 }
