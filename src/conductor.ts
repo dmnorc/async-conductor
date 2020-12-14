@@ -19,11 +19,11 @@ export class Conductor<C = unknown> implements IConductor<C> {
     this.event = new Event();
   }
 
-  get active(): Promise<boolean> {
+  get active(): Promise<void> {
     return this.event.wait(EventType.active, true);
   }
 
-  get inactive(): Promise<boolean> {
+  get inactive(): Promise<void> {
     return this.event.wait(EventType.active, false);
   }
 

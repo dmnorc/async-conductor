@@ -79,15 +79,32 @@ class MockTestComponent extends TestComponent2 {
 
 describe("Test Conductor", () => {
   it("Test Conductor Basic FLow", async () => {
-    const testConductor = new Conductor<Context>({});
+    const testConductorNullableContext = new Conductor();
+    expect(testConductorNullableContext.context).to.be.null;
+    const context: Context = {};
+    const testConductor = new Conductor<Context>(context);
+    expect(testConductor.context).to.be.equal(context);
     testConductor.add(TestComponent);
+    const testComponent = testConductor.get(TestComponent);
+    expect(testComponent.context).to.be.equal(context);
+    await testComponent.inactive;
     expect(testConductor.get(ResultComponent)).to.be.null;
-    await Promise.all([testConductor.setup(), testConductor.active]);
+    await Promise.all([
+      testConductor.setup(),
+      testConductor.active,
+      testComponent.active,
+      testComponent.released,
+    ]);
     const result = testConductor.get(ResultComponent);
+    expect(result.context).to.be.equal(context);
+    await result.acquired;
+    await result.active;
     expect(result.getResult(TestComponent.name)).to.be.true;
     expect(result.getResult(TestComponent2.name)).to.be.true;
-    const testComponent = testConductor.get(TestComponent);
     const testComponent2 = testConductor.get(TestComponent2);
+    expect(testComponent2.context).to.be.equal(context);
+    await testComponent2.acquired;
+    await testComponent2.active;
     expect(testComponent.getDependency(TestComponent)).to.be.null;
     expect(testComponent.getDependency(TestComponent2)).to.be.equals(
       testComponent2,
@@ -95,6 +112,12 @@ describe("Test Conductor", () => {
     await Promise.all([testConductor.shutdown(), testConductor.inactive]);
     expect(result.getResult(TestComponent.name)).to.be.false;
     expect(result.getResult(TestComponent2.name)).to.be.false;
+    await Promise.race([
+      testComponent2.released,
+      testComponent2.inactive,
+      result.released,
+      result.inactive,
+    ]);
   });
 
   it("Test Component Patch", async () => {

@@ -4,16 +4,16 @@ export interface IComponentEvent {
   emitter: EventEmitter;
   events: { [key: string]: boolean };
   emit(event: string, value: boolean): void;
-  wait(event: string, desired: boolean): Promise<boolean>;
+  wait(event: string, desired: boolean): Promise<void>;
 }
 
 export interface IComponent<C> {
   context: C;
   dependencies: Constructor<IComponent<C>, C>[];
-  readonly active: Promise<boolean>;
-  readonly inactive: Promise<boolean>;
-  readonly acquired: Promise<boolean>;
-  readonly released: Promise<boolean>;
+  readonly active: Promise<void>;
+  readonly inactive: Promise<void>;
+  readonly acquired: Promise<void>;
+  readonly released: Promise<void>;
   setup(dependsOn: IComponent<C>[]): Promise<this>;
   shutdown(): Promise<this>;
   acquire(component: IComponent<C>): Promise<this>;
@@ -25,8 +25,8 @@ export interface IComponent<C> {
 
 export interface IConductor<C> {
   context: C;
-  readonly active: Promise<boolean>;
-  readonly inactive: Promise<boolean>;
+  readonly active: Promise<void>;
+  readonly inactive: Promise<void>;
   setup(): Promise<void>;
   shutdown(): Promise<void>;
   patch<T, U>(

@@ -15,19 +15,19 @@ export abstract class Component<C = unknown> implements IComponent<C> {
     this.event = new Event();
   }
 
-  get active(): Promise<boolean> {
+  get active(): Promise<void> {
     return this.event.wait(EventType.active, true);
   }
 
-  get inactive(): Promise<boolean> {
+  get inactive(): Promise<void> {
     return this.event.wait(EventType.active, false);
   }
 
-  get acquired(): Promise<boolean> {
+  get acquired(): Promise<void> {
     return this.event.wait(EventType.acquired, true);
   }
 
-  get released(): Promise<boolean> {
+  get released(): Promise<void> {
     return this.event.wait(EventType.acquired, false);
   }
 

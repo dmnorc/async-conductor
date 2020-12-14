@@ -23,10 +23,10 @@ export class Event implements IComponentEvent {
     this.emitter.emit(event, value);
   }
 
-  async wait(event: string, desired: boolean): Promise<boolean> {
-    if (this.events[event] === desired) return desired;
+  async wait(event: string, desired: boolean): Promise<void> {
+    if (this.events[event] === desired) return;
     for await (const [value] of on(this.emitter, event)) {
-      if (desired === value) return value;
+      if (desired === value) return;
     }
   }
 }

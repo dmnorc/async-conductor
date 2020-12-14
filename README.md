@@ -80,6 +80,7 @@ apiConductor.setup().then(() => {
 });
 
 // State getters, the same for component and acuired, released for dependancy state.
+// Attention! - they resolve only when conductor or component in this state, can make infinite await.
 apiConductor.active.then(() => {
   const logger = apiConductor.get(AsyncLogger);
   logger.info("Conductor estabileshed");
