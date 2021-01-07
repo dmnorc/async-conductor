@@ -22,32 +22,32 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "coverage": "nyc --reporter=text yarn test",
-    "codecov": "nyc report --reporter=text-lcov | codecov --disable=gcov --pipe",
+    "coverage": "npx nyc --reporter=text yarn test",
+    "codecov": "npx nyc report --reporter=text-lcov | npx codecov --disable=gcov --pipe",
     "prepare": "yarn lint && yarn build",
-    "lint": "eslint src --fix --ext .ts",
-    "test": "yarn lint && yarn build && ts-mocha --paths 'test/**/test_*.ts' --exit"
+    "lint": "npx eslint src --fix --ext .ts",
+    "test": "yarn lint && yarn build && npx ts-mocha --paths 'test/**/test_*.ts' --exit"
   },
   "dependencies": {
     "tslib": "^2.0.3"
   },
   "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@types/chai": "^4.2.14",
     "@types/mocha": "^8.0.4",
     "@types/node": "^14.14.10",
     "@typescript-eslint/eslint-plugin": "^4.9.0",
     "@typescript-eslint/parser": "^4.9.0",
-    "@istanbuljs/nyc-config-typescript": "^1.0.1",
+    "chai": "^4.2.0",
+    "codecov": "^3.8.1",
     "eslint": "^7.15.0",
-    "eslint-config-prettier": "^6.15.0",
+    "eslint-config-prettier": "^7.1.0",
     "eslint-plugin-prettier": "^3.2.0",
     "mocha": "^8.2.1",
-    "chai": "^4.2.0",
-    "istanbul": "^0.4.5",
     "mocha-lcov-reporter": "^1.3.0",
-    "codecov": "^3.8.1",
     "nyc": "^15.1.0",
     "prettier": "^2.2.1",
+    "source-map-support": "^0.5.19",
     "ts-mocha": "^8.0.0",
     "ts-node": "^9.1.0",
     "typescript": "^4.1.2"

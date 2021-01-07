@@ -66,28 +66,21 @@ export class Conductor<C = unknown> implements IConductor<C> {
   }
 
   add<T>(componentClass: Constructor<T & IComponent<C>, C>): T & IComponent<C> {
-    if (this.components[componentClass.name]) {
-      return <T & IComponent<C>>this.components[componentClass.name];
+    const name = componentClass.name;
+    if (this.components[name]) {
+      return <T & IComponent<C>>this.components[name];
     }
-    if (componentClass.name in this.patches) {
-      componentClass = <Constructor<T & IComponent<C>, C>>(
-        this.patches[componentClass.name]
-      );
+    if (name in this.patches) {
+      componentClass = <Constructor<T & IComponent<C>, C>>this.patches[name];
     }
-    this.components[componentClass.name] = <IComponent<C>>(
-      new componentClass(<C>this.context)
-    );
-    return <T & IComponent<C>>this.components[componentClass.name];
+    this.components[name] = <IComponent<C>>new componentClass(<C>this.context);
+    return <T & IComponent<C>>this.components[name];
   }
 
   get<T>(componentClass: Constructor<T & IComponent<C>, C>): T & IComponent<C> {
-    if (componentClass.name in this.patches) {
-      componentClass = <Constructor<T & IComponent<C>, C>>(
-        this.patches[componentClass.name]
-      );
-    }
-    if (this.components[componentClass.name]) {
-      return <T & IComponent<C>>this.components[componentClass.name];
+    const name = componentClass.name;
+    if (this.components[name]) {
+      return <T & IComponent<C>>this.components[name];
     }
     return null;
   }

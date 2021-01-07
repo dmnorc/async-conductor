@@ -127,7 +127,6 @@ describe("Test Conductor", () => {
     await testConductor.setup();
     const result = testConductor.get(ResultComponent);
     const testComponent = testConductor.get(TestComponent2);
-    expect(testConductor.get(MockTestComponent)).to.be.equal(testComponent);
     testComponent.testMethod();
     expect(result.getResult(TestComponent2.name)).to.be.undefined;
     expect(result.getResult(MockTestComponent.name)).to.be.true;
