@@ -2,6 +2,7 @@ import { describe, it } from "mocha";
 import { expect } from "chai";
 
 import { Conductor, Component } from "../src";
+import { ConductorError } from "../dist";
 
 interface Context {
   [key: string]: string;
@@ -9,8 +10,10 @@ interface Context {
 
 class ResultComponent extends Component<Context> {
   [key: string]: unknown;
+  health: boolean;
 
   async onSetup(): Promise<void> {
+    this.health = true;
     return;
   }
 
@@ -24,6 +27,10 @@ class ResultComponent extends Component<Context> {
 
   getResult(name: string): unknown {
     return this[name];
+  }
+
+  async healthCheck(): Promise<boolean> {
+    return this.health;
   }
 }
 
@@ -78,7 +85,7 @@ class MockTestComponent extends TestComponent2 {
 }
 
 describe("Test Conductor", () => {
-  it("Test Conductor Basic FLow", async () => {
+  it("Basic FLow", async () => {
     const testConductorNullableContext = new Conductor();
     expect(testConductorNullableContext.context).to.be.null;
     const context: Context = {};
@@ -88,6 +95,7 @@ describe("Test Conductor", () => {
     const testComponent = testConductor.get(TestComponent);
     expect(testComponent.context).to.be.equal(context);
     await testComponent.inactive;
+    expect(testComponent.isActive).to.be.false;
     expect(testConductor.get(ResultComponent)).to.be.null;
     await Promise.all([
       testConductor.setup(),
@@ -95,10 +103,13 @@ describe("Test Conductor", () => {
       testComponent.active,
       testComponent.released,
     ]);
+    expect(testComponent.isActive).to.be.true;
     const result = testConductor.get(ResultComponent);
     expect(result.context).to.be.equal(context);
     await result.acquired;
     await result.active;
+    expect(result.isActive).to.be.true;
+    expect(result.isAcquired).to.be.true;
     expect(result.getResult(TestComponent.name)).to.be.true;
     expect(result.getResult(TestComponent2.name)).to.be.true;
     const testComponent2 = testConductor.get(TestComponent2);
@@ -120,7 +131,7 @@ describe("Test Conductor", () => {
     ]);
   });
 
-  it("Test Component Patch", async () => {
+  it("Patch", async () => {
     const testConductor = new Conductor({});
     testConductor.patch(TestComponent2, MockTestComponent);
     testConductor.add(TestComponent);
@@ -134,5 +145,23 @@ describe("Test Conductor", () => {
     await testConductor.shutdown();
     expect(result.getResult(TestComponent2.name)).to.be.undefined;
     expect(result.getResult(MockTestComponent.name)).to.be.false;
+  });
+
+  it("HealthCheck", async () => {
+    const testConductor = new Conductor({});
+    testConductor.add(TestComponent);
+    await testConductor.setup();
+    expect(await testConductor.healthCheck()).to.be.true;
+    const result = testConductor.get(ResultComponent);
+    result.health = false;
+    try {
+      await testConductor.healthCheck();
+      expect(await testConductor.healthCheck()).to.be.false;
+    } catch (e) {
+      const error = <ConductorError>e;
+      expect(error.component).to.be.equal(ResultComponent);
+    }
+    await result.reload();
+    expect(await testConductor.healthCheck()).to.be.true;
   });
 });
